@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentinel | Scenarios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* FLEX LAYOUTS FOR RESIZING */
+        .demo-container { display: flex; width: 100%; height: 100vh; overflow: hidden; }
+        
+        .code-panel { 
+            width: 400px; /* Default Width */
+            min-width: 200px; 
+            background: #0b0e14; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .vis-panel { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 300px;
+        }
+
+        .graph-section {
+            flex: 1; /* Takes remaining height */
+            min-height: 200px;
+            position: relative;
+        }
+
+        .logs-section {
+            height: 250px; /* Default Height */
+            min-height: 100px;
+            display: flex; 
+            flex-direction: column;
+        }
+
+        /* Clean Textarea for Code View */
+        .code-display { 
+            flex: 1; 
+            padding: 15px; 
+            overflow: auto; 
+            font-family: 'JetBrains Mono'; 
+            font-size: 12px; 
+            line-height: 1.5;
+            color: #a9b2c3; 
+            white-space: pre; 
+            border: none; 
+            outline: none; 
+            background: transparent; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-shield-virus"></i>
+            <div>SENTINEL<span>.AI</span></div>
+        </div>
+        
+        <nav>
+            <a href="/" class="nav-item"><i class="fas fa-terminal"></i> LIVE SCANNER</a>
+            <a href="/demo" class="nav-item active"><i class="fas fa-layer-group"></i> SCENARIOS</a>
+        </nav>
+
+        <div style="margin-top: 30px;">
+            <label>TEST SCENARIOS</label>
+            
+            <div class="scenario-card" onclick="runDemo('safe', this)">
+                <h4><i class="fas fa-check-circle" style="color: var(--success)"></i> INTERNAL TOOL</h4>
+                <p>Vulnerability exists, but is firewalled.</p>
+            </div>
+
+            <div class="scenario-card" onclick="runDemo('risky', this)">
+                <h4><i class="fas fa-radiation" style="color: var(--danger)"></i> PUBLIC EXPLOIT</h4>
+                <p>Vulnerability exposed to public internet.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        
+        <div class="code-panel" id="codePanel">
+            <div class="panel-header"><i class="fas fa-code"></i> LIVE SOURCE VIEW</div>
+            <textarea id="codeDisplay" class="code-display" readonly>// Select a scenario...</textarea>
+        </div>
+
+        <div class="resizer-v" id="dragCode"></div>
+
+        <div class="vis-panel" id="visPanel">
+            
+            <div class="graph-section" id="graphSection">
+                <div id="cy" style="width:100%; height:100%;"></div>
+            </div>
+
+            <div class="resizer-h" id="dragLogs"></div>
+
+            <div class="logs-section" id="logsSection">
+                <div class="panel-header">
+                    <span><i class="fas fa-microchip"></i> ENGINE TELEMETRY</span>
+                    <div id="statusIndicator" style="color: #666; font-size: 10px;">IDLE</div>
+                </div>
+                <div id="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- RESIZING LOGIC ---
+        
+        // 1. Vertical Resizer (Code Panel width)
+        const resizerV = document.getElementById('dragCode');
+        const codePanel = document.getElementById('codePanel');
+
+        resizerV.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            resizerV.classList.add('resizing');
+            document.addEventListener('mousemove', resizeX);
+            document.addEventListener('mouseup', stopResizeX);
+        });
+
+        function resizeX(e) {
+            // Calculate new width based on mouse X position relative to sidebar (300px offset roughly)
+            // But simpler: just use movementX or absolute pageX minus sidebar width
+            const sidebarWidth = 300; // Fixed sidebar width
+            const newWidth = e.pageX - sidebarWidth;
+            if (newWidth > 150 && newWidth < 800) {
+                codePanel.style.width = newWidth + 'px';
+            }
+        }
+
+        function stopResizeX() {
+            resizerV.classList.remove('resizing');
+            document.removeEventListener('mousemove', resizeX);
+            document.removeEventListener('mouseup', stopResizeX);
+            // Resize graph if needed
+            if(window.cyInstance) window.cyInstance.resize(); 
+        }
+
+        // 2. Horizontal Resizer (Logs Height)
+        const resizerH = document.getElementById('dragLogs');
+        const logsSection = document.getElementById('logsSection');
+        const demoContainer = document.querySelector('.demo-container');
+
+        resizerH.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            resizerH.classList.add('resizing');
+            document.addEventListener('mousemove', resizeY);
+            document.addEventListener('mouseup', stopResizeY);
+        });
+
+        function resizeY(e) {
+            // Calculate height from bottom
+            const containerHeight = demoContainer.offsetHeight;
+            const newHeight = containerHeight - e.clientY;
+            
+            if (newHeight > 50 && newHeight < containerHeight - 100) {
+                logsSection.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopResizeY() {
+            resizerH.classList.remove('resizing');
+            document.removeEventListener('mousemove', resizeY);
+            document.removeEventListener('mouseup', stopResizeY);
+            if(window.cyInstance) window.cyInstance.resize();
+        }
+
+        // --- APP LOGIC (Same as before) ---
+        const SCENARIOS = {
+            safe: {
+                code: `from fastapi import FastAPI\nimport yaml\n\napp = FastAPI()\n\n# --- SAFE ROUTE ---\n@app.get("/public/home")\ndef home():\n    return {"status": "Online"}\n\n# --- INTERNAL ADMIN (VULNERABLE) ---\n# This function uses yaml.load (Unsafe)\n# BUT it is NOT connected to the internet.\n@app.post("/admin/config")\ndef upload_config(data: str):\n    return yaml.load(data)`,
+                req: `fastapi==0.68.0\npyyaml==5.3`
+            },
+            risky: {
+                code: `from fastapi import FastAPI\nimport yaml\n\napp = FastAPI()\n\n# --- PUBLIC EXPLOIT ---\n# The developer accidentally exposed\n# the vulnerable function to the public.\n@app.post("/public/upload")\ndef upload_document(data: str):\n    # CRITICAL: Remote Code Execution possible here\n    return yaml.load(data)`,
+                req: `fastapi==0.68.0\npyyaml==5.3`
+            }
+        };
+
+        async function runDemo(type, element) {
+            document.querySelectorAll('.scenario-card').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            const scenario = SCENARIOS[type];
+            const logBox = document.getElementById('logs');
+            const codeDisp = document.getElementById('codeDisplay');
+
+            codeDisp.value = scenario.code;
+
+            logBox.innerHTML = `<div class="log-entry"><span class="log-system">>> Initializing Scenario: ${type.toUpperCase()}...</span></div>`;
+
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: scenario.code, requirements: scenario.req })
+            });
+            const data = await response.json();
+
+            logBox.innerHTML = "";
+            data.logs.forEach(l => {
+                let css = "log-info";
+                if(l.includes("BLOCK")) css = "log-error";
+                if(l.includes("ALLOW")) css = "log-success";
+                logBox.innerHTML += `<div class="log-entry"><span class="timestamp">${new Date().toLocaleTimeString()}</span> <span class="${css}">${l}</span></div>`;
+            });
+            logBox.scrollTop = logBox.scrollHeight;
+
+            window.cyInstance = cytoscape({
+                container: document.getElementById('cy'),
+                elements: data.graph,
+                style: [
+                    { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(label)', 'color': '#fff', 'font-family': 'Rajdhani', 'font-size': '12px', 'text-valign': 'bottom', 'text-margin-y': 10, 'text-transform': 'uppercase' } },
+                    { selector: 'edge', style: { 'width': 3, 'line-color': '#555', 'target-arrow-color': '#555', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } },
+                    { selector: '#INTERNET', style: { 'shape': 'hexagon', 'width': 70, 'height': 70, 'background-color': '#00f2ff', 'border-width': 0, 'label': 'PUBLIC NET' } }
+                ],
+                layout: { name: 'breadthfirst', directed: true, spacingFactor: 1.5 }
+            });
+        }
+    </script>
+</body>
+</html>

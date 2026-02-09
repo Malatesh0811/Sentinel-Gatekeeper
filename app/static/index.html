@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentinel | Live Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* LIVE SCANNER SPECIFIC LAYOUT */
+        .scanner-container { display: flex; width: 100%; height: 100vh; overflow: hidden; }
+        
+        .vis-panel { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative;
+            background: radial-gradient(circle at center, #11151c 0%, #050505 100%);
+        }
+
+        .graph-section {
+            flex: 1; 
+            min-height: 200px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* EMPTY STATE ANIMATION */
+        .empty-state {
+            text-align: center;
+            color: #333b4d;
+            animation: pulse 3s infinite;
+        }
+        .empty-state i { font-size: 64px; margin-bottom: 20px; display: block; }
+        .empty-state h3 { margin: 0; font-family: 'Rajdhani'; font-weight: 700; font-size: 24px; text-transform: uppercase; }
+        
+        @keyframes pulse {
+            0% { opacity: 0.3; text-shadow: 0 0 0 transparent; }
+            50% { opacity: 0.8; text-shadow: 0 0 20px var(--accent); color: #444c5e; }
+            100% { opacity: 0.3; text-shadow: 0 0 0 transparent; }
+        }
+
+        .logs-section {
+            height: 300px; /* Default Log Height */
+            min-height: 50px;
+            display: flex; 
+            flex-direction: column;
+            background: #0b0e14;
+            border-top: var(--border-width) solid var(--border-color);
+        }
+
+        /* NEON BUTTON FIX */
+        .btn-glow {
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+            transition: 0.3s;
+        }
+        .btn-glow:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 30px var(--accent);
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <i class="fas fa-shield-virus"></i>
+            <div>SENTINEL<span>.AI</span></div>
+        </div>
+        
+        <nav>
+            <a href="/" class="nav-item active"><i class="fas fa-terminal"></i> LIVE SCANNER</a>
+            <a href="/demo" class="nav-item"><i class="fas fa-layer-group"></i> SCENARIOS</a>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <label><i class="fas fa-code"></i> PYTHON SOURCE</label>
+            <textarea id="codeInput" style="height: 200px;" placeholder="# Paste main.py code here..."></textarea>
+            
+            <label style="margin-top: 15px;"><i class="fas fa-box-open"></i> DEPENDENCIES</label>
+            <textarea id="reqInput" style="height: 80px;" placeholder="package==version"></textarea>
+            
+            <button class="btn-primary btn-glow" onclick="analyze()">
+                <i class="fas fa-radar"></i> INITIATE SCAN
+            </button>
+        </div>
+    </div>
+
+    <div class="vis-panel" id="visPanel">
+        
+        <div class="graph-section" id="graphSection">
+            <div id="emptyState" class="empty-state">
+                <i class="fas fa-satellite-dish"></i>
+                <h3>Awaiting Telemetry</h3>
+            </div>
+            <div id="cy" style="width:100%; height:100%; position:absolute; top:0; left:0; z-index:5;"></div>
+        </div>
+
+        <div class="resizer-h" id="dragLogs"></div>
+
+        <div class="logs-section" id="logsSection">
+            <div class="panel-header">
+                <span><i class="fas fa-stream"></i> SYSTEM EXECUTION LOGS</span>
+                <div id="decisionBadge" class="badge" style="display:none">IDLE</div>
+            </div>
+            <div id="logs">
+                <div class="log-entry"><span class="timestamp">--:--:--</span> <span class="log-info">System ready. Paste code to begin analysis.</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. RESIZER LOGIC ---
+        const resizer = document.getElementById('dragLogs');
+        const logsSection = document.getElementById('logsSection');
+        const visPanel = document.getElementById('visPanel');
+
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            document.addEventListener('mousemove', resizeY);
+            document.addEventListener('mouseup', stopResizeY);
+        });
+
+        function resizeY(e) {
+            const newHeight = visPanel.offsetHeight - e.clientY;
+            if (newHeight > 50 && newHeight < visPanel.offsetHeight - 100) {
+                logsSection.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopResizeY() {
+            document.removeEventListener('mousemove', resizeY);
+            document.removeEventListener('mouseup', stopResizeY);
+            if(window.cyInstance) window.cyInstance.resize();
+        }
+
+        // --- 2. ANALYZE LOGIC ---
+        async function analyze() {
+            const code = document.getElementById('codeInput').value;
+            const reqs = document.getElementById('reqInput').value;
+            const logBox = document.getElementById('logs');
+            const emptyState = document.getElementById('emptyState');
+            
+            if(!code) { alert("Please input source code first."); return; }
+
+            // UI Updates
+            emptyState.style.display = 'none'; // Hide placeholder
+            logBox.innerHTML = `<div class="log-entry"><span class="log-system">>> Uploading payload to Context Engine...</span></div>`;
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, requirements: reqs })
+                });
+                const data = await response.json();
+
+                // 1. Logs
+                logBox.innerHTML = "";
+                data.logs.forEach(l => {
+                    let css = "log-info";
+                    if(l.includes("BLOCKING") || l.includes("CRITICAL")) css = "log-error";
+                    if(l.includes("COMPLETE") || l.includes("SUCCESS")) css = "log-success";
+                    logBox.innerHTML += `<div class="log-entry"><span class="timestamp">${new Date().toLocaleTimeString()}</span> <span class="${css}">${l}</span></div>`;
+                });
+
+                // 2. Badge
+                const badge = document.getElementById('decisionBadge');
+                badge.style.display = 'block';
+                badge.className = `badge badge-${data.decision}`;
+                badge.innerHTML = `<i class="fas fa-${data.decision === 'BLOCK' ? 'ban' : 'check'}"></i> ${data.decision}`;
+
+                // 3. Graph (The Fix)
+                // We use window.cyInstance to ensure we don't create duplicates
+                window.cyInstance = cytoscape({
+                    container: document.getElementById('cy'),
+                    elements: data.graph,
+                    style: [
+                        { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(label)', 'color': '#fff', 'font-family': 'Rajdhani', 'font-size': '12px', 'text-valign': 'bottom', 'text-margin-y': 10, 'text-transform': 'uppercase', 'font-weight': 'bold', 'text-outline-color': '#000', 'text-outline-width': 2 } },
+                        { selector: 'edge', style: { 'width': 3, 'line-color': '#444', 'target-arrow-color': '#444', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier' } },
+                        { selector: '#INTERNET', style: { 'shape': 'hexagon', 'width': 80, 'height': 80, 'background-color': '#00f2ff', 'border-width': 0, 'label': 'EXTERNAL WEB' } }
+                    ],
+                    layout: { name: 'breadthfirst', directed: true, spacingFactor: 1.5, padding: 50 }
+                });
+
+            } catch (e) {
+                logBox.innerHTML += `<div class="log-entry"><span class="log-error">FATAL: Connection to analysis engine failed.</span></div>`;
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+
+:root {
+    --bg-deep: #050505;       
+    --bg-panel: #0f1218;      
+    --border-color: #2d3442;  
+    --border-active: #00f2ff; 
+    --accent: #00f2ff;
+    --danger: #ff3355;
+    --success: #00ff9d;
+    
+    /* NEW: Thicker Borders for "Rugged" feel */
+    --border-width: 3px; 
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: #e6edf3;
+    font-family: 'Rajdhani', sans-serif;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+}
+
+/* --- RESIZABLE LAYOUT UTILITIES --- */
+.resizer-v {
+    width: 8px;
+    cursor: col-resize;
+    background: transparent;
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    transition: 0.2s;
+    z-index: 100;
+}
+.resizer-v:hover, .resizer-v.resizing {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.resizer-h {
+    height: 8px;
+    cursor: row-resize;
+    background: transparent;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: 0.2s;
+    z-index: 100;
+}
+.resizer-h:hover, .resizer-h.resizing {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 300px; /* Initial width */
+    min-width: 200px;
+    background: var(--bg-panel);
+    border-right: var(--border-width) solid var(--border-color);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.brand {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    border-bottom: var(--border-width) solid var(--border-color);
+    padding-bottom: 20px;
+}
+.brand i { color: var(--accent); }
+.brand span { color: var(--accent); }
+
+/* NAVIGATION */
+.nav-item {
+    padding: 15px;
+    color: #8b949e;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    border-left: var(--border-width) solid transparent;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 10px;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(0, 242, 255, 0.1), transparent);
+    border-left-color: var(--accent);
+    color: var(--accent);
+}
+
+/* --- MAIN CONTENT AREAS --- */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #000;
+}
+
+/* INPUTS & PANELS */
+textarea, .code-viewer {
+    background: #080a0f;
+    border: var(--border-width) solid var(--border-color);
+    color: #d1d5db;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0; /* Squared off edges for pro look */
+}
+textarea:focus { border-color: var(--accent); }
+
+/* RESULTS & LOGS */
+.panel-header {
+    background: #161b25;
+    padding: 8px 15px;
+    border-bottom: var(--border-width) solid var(--border-color);
+    border-top: var(--border-width) solid var(--border-color);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ccc;
+}
+
+#logs {
+    padding: 10px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: #0b0e14;
+    height: 100%;
+}
+
+.log-entry { margin-bottom: 4px; display: flex; gap: 10px; }
+.timestamp { color: #444; }
+.log-info { color: #8b949e; }
+.log-error { color: var(--danger); }
+.log-success { color: var(--success); }
+.log-system { color: var(--accent); }
+
+/* SCENARIO CARDS */
+.scenario-card {
+    background: #0b0e14;
+    border: var(--border-width) solid var(--border-color);
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.scenario-card:hover { border-color: #fff; }
+.scenario-card.active {
+    border-color: var(--accent);
+    background: rgba(0, 242, 255, 0.05);
+}
