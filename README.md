@@ -45,11 +45,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## 🛡️ Sentinel Dashboard (Scenario Mode)
 *Interactive dashboard allowing users to toggle between "Safe" and "Risky" architectural patterns.*
-![Sentinel Dashboard](screenshots/dashboard.jpg)
+![Sentinel Dashboard](screenshots/dashboard.png)
 
 ## ⛔ Security Block Enforced
 *The engine detects a critical vulnerability on a public route and automatically blocks the deployment pipeline.*
-![Blocked Deployment](screenshots/logs.jpg)
+![Blocked Deployment](screenshots/logs.png)
 
 ## 🕸️ Reachability Graph
 *Visualizing the attack path from the Public Internet to the internal vulnerable component.*
