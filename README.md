@@ -27,7 +27,7 @@ Traditional security scanners (SAST/SCA) suffer from **Alert Fatigue**. They fla
 docker run -p 8000:8000 yourusername/sentinel-gatekeeper
 
 
-## 📸 Screenshots
+### 📸 Screenshots
 
 ### 🛡️ Live Security Dashboard
 *Real-time visualization of your application's architecture and security status.*
