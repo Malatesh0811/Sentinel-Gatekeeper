@@ -28,27 +28,29 @@ This is the easiest way to run the full environment with all scanners pre-instal
 ```bash
 docker build -t sentinel-gatekeeper .
 docker run -p 8000:8000 sentinel-gatekeeper
+```
 
 ### Option 2: Local Development
 If you want to edit the python code and see changes instantly.
 
-Bash
+```Bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
 # 2. Run the backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+### 📸 Screenshots
 
-## 📸 Screenshots
 
-### 🛡️ Sentinel Dashboard (Scenario Mode)
+## 🛡️ Sentinel Dashboard (Scenario Mode)
 *Interactive dashboard allowing users to toggle between "Safe" and "Risky" architectural patterns.*
 ![Sentinel Dashboard](screenshots/dashboard.jpg)
 
-### ⛔ Security Block Enforced
+## ⛔ Security Block Enforced
 *The engine detects a critical vulnerability on a public route and automatically blocks the deployment pipeline.*
 ![Blocked Deployment](screenshots/logs.jpg)
 
-### 🕸️ Reachability Graph
+## 🕸️ Reachability Graph
 *Visualizing the attack path from the Public Internet to the internal vulnerable component.*
 ![Graph Visualization](screenshots/graph.png)
