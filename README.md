@@ -1,7 +1,6 @@
 # 🛡️ Sentinel Gatekeeper
 > **Context-Aware DevSecOps Policy Engine**
 
-![Sentinel Dashboard](screenshots/dashboard.png)
 
 ## 🚀 The Problem
 Traditional security scanners (SAST/SCA) suffer from **Alert Fatigue**. They flag every vulnerability found, regardless of whether it is actually exploitable.
