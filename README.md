@@ -25,3 +25,18 @@ Traditional security scanners (SAST/SCA) suffer from **Alert Fatigue**. They fla
 ### Option 1: Docker (Recommended)
 ```bash
 docker run -p 8000:8000 yourusername/sentinel-gatekeeper
+
+
+## 📸 Screenshots
+
+### 🛡️ Live Security Dashboard
+*Real-time visualization of your application's architecture and security status.*
+![Live Dashboard](screenshots/dashboard.png)
+
+### 🕸️ Attack Graph Visualization
+*Dynamically maps "Internet" -> "Public Route" -> "Vulnerable Function" to detect exploit paths.*
+![Attack Graph](screenshots/graph.png)
+
+### ⛔ Blocked Deployment
+*The engine automatically blocks the build when a Critical Vulnerability is found on a Public Route.*
+![Blocked Deployment](screenshots/logs.png)
