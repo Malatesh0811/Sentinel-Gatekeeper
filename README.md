@@ -1,5 +1,6 @@
 # 🛡️ Sentinel Gatekeeper
 > **Context-Aware DevSecOps Policy Engine**
+> ![Build Status](https://github.com/Malatesh0811/sentinel-gatekeeper/actions/workflows/security-test.yml/badge.svg)
 
 
 ## 🚀 The Problem
