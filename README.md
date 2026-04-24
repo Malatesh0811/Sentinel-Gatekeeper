@@ -20,6 +20,7 @@ Traditional security scanners (SAST/SCA) suffer from **Alert Fatigue**. They fla
 * **Visualization:** Cytoscape.js
 * **Containerization:** Docker (Debian Slim)
 * **Architecture:** REST API (FastAPI)
+* just a comment
 
 ## ⚡ How to Run
 
