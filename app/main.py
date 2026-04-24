@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+#---API---
 app = FastAPI()
 
 # --- CONFIGURATION ---
